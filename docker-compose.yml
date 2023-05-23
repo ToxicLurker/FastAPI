@@ -4,16 +4,14 @@ services:
     # command: "sleep 1000"
     # command: "poetry run python /src/test_project/funcs.py"
     build: .
-    # volumes:
-    #   - ./src/test_project:/src/test_project
+    volumes:
+      - ./src/test_project:/src/test_project
       # - ./src/test_project:/src/test_project
       # - ./entrypoint.sh:/entrypoint.sh
       # - ./poetry.lock:/app/poetry.lock
       # - ./pyproject.toml:/app/pyproject.toml
     ports:
-      - "8000:8000"
-    depends_on:
-      - db
+      - "80:80"
     # entrypoint:
     #   /entrypoint.sh
     # poetry run uvicorn src.test_project.funcs:app --host 0.0.0.0 --port 8000
@@ -32,3 +30,6 @@ services:
       - "3306:3306"
     volumes:
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./new_people.csv:/var/lib/mysql-files/new_people.csv
+      - ./people.csv:/var/lib/mysql-files/people.csv
+      - ./config-file.cnf:/etc/mysql/conf.d/config-file.cnf

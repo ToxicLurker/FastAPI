@@ -11,11 +11,6 @@ pandas = "1.5.2"
 fastapi = "^0.88.0"
 uvicorn = {extras = ["standart"], version = "^0.20.0"}
 pydantic = "^1.10.2"
-python-multipart = "^0.0.5"
-python-jose = {extras = ["cryptography"], version = "^3.3.0"}
-passlib = {extras = ["bcrypt"], version = "^1.7.4"}
-mysql-connector-python = "8.0.33"
-aiomysql = "0.1.1"
 
 [build-system]
 requires = ["poetry-core"]
