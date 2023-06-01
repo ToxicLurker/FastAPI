@@ -12,7 +12,7 @@ import mysql.connector
 
 from fastapi import FastAPI, Request
 
-from .crud.crud_user import get_user, create_user, get_user_info
+from .crud.crud_user import get_user, create_user, get_user_info, get_user_by_name, show_index
 from .models.token_modles import Token, TokenData
 from .models.user_models import User, UserInDB
 
@@ -127,3 +127,12 @@ async def read_users_me(current_user: User = Depends(get_current_active_user)):
 async def get_user_by_id(id: str, current_user: User = Depends(get_current_active_user)):
     return get_user_info(id)
 
+
+@app.get("/user/search")
+async def user_search(first_name: str, second_name: str, current_user: User = Depends(get_current_active_user)):
+    return get_user_by_name(first_name, second_name)
+
+
+@app.get("/user/show_index")
+async def user_show_index(first_name: str, second_name: str, current_user: User = Depends(get_current_active_user)):
+    return show_index(first_name, second_name)

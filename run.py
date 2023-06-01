@@ -26,10 +26,10 @@ data = pd.read_csv('people.csv', header=0, names=['full_name', 'age', 'city'])
 print(1)
 data['id'] = data["full_name"]
 print(2)
-data['first_name'] = data["full_name"].apply(lambda x: x.split()[0])
+data['first_name'] = data["full_name"].apply(lambda x: x.split()[1])
 print(3)
 data['age'] = data["age"].astype(str)
-data['second_name'] = data["full_name"].apply(lambda x: x.split()[1])
+data['second_name'] = data["full_name"].apply(lambda x: x.split()[0])
 print(4)
 data['birthdate'] = "NULL"
 print(5)
