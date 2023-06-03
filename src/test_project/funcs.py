@@ -12,7 +12,7 @@ import mysql.connector
 
 from fastapi import FastAPI, Request
 
-from .crud.crud_user import get_user, create_user, get_user_info, get_user_by_name, show_index
+from .crud.crud_user import get_user, create_user, get_user_info, get_user_by_name, generate_numbers_func
 from .models.token_modles import Token, TokenData
 from .models.user_models import User, UserInDB
 
@@ -22,7 +22,7 @@ import logging
 # openssl rand -hex 32
 SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+ACCESS_TOKEN_EXPIRE_MINUTES = 30000
 
 
 
@@ -130,9 +130,14 @@ async def get_user_by_id(id: str, current_user: User = Depends(get_current_activ
 
 @app.get("/user/search")
 async def user_search(first_name: str, second_name: str, current_user: User = Depends(get_current_active_user)):
-    return get_user_by_name(first_name, second_name)
+    return get_user_by_name(first_name.capitalize(), second_name.capitalize())
 
 
-@app.get("/user/show_index")
-async def user_show_index(first_name: str, second_name: str, current_user: User = Depends(get_current_active_user)):
-    return show_index(first_name, second_name)
+@app.get("/generate_numbers")
+async def generate_numbers(current_user: User = Depends(get_current_active_user)):
+    return generate_numbers_func()
+
+
+# @app.get("/user/show_index")
+# async def user_show_index(first_name: str, second_name: str, current_user: User = Depends(get_current_active_user)):
+#     return show_index(first_name, second_name)

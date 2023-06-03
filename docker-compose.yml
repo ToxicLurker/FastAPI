@@ -1,35 +1,58 @@
 version: "3.9"
 services:
   app:
-    # command: "sleep 1000"
-    # command: "poetry run python /src/test_project/funcs.py"
     build: .
     volumes:
       - ./src/test_project:/src/test_project
-      # - ./src/test_project:/src/test_project
-      # - ./entrypoint.sh:/entrypoint.sh
-      # - ./poetry.lock:/app/poetry.lock
-      # - ./pyproject.toml:/app/pyproject.toml
     ports:
       - "80:80"
-    # entrypoint:
-    #   /entrypoint.sh
-    # poetry run uvicorn src.test_project.funcs:app --host 0.0.0.0 --port 8000
-  db:
-    image: mysql
-    # NOTE: use of "mysql_native_password" is not recommended: https://dev.mysql.com/doc/refman/8.0/en/upgrading-from-previous-series.html#upgrade-caching-sha2-password
-    # (this is just an example, not intended to be a production configuration)
-    command: --default-authentication-plugin=mysql_native_password
-    restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: example
-      MYSQL_USER: admin
-      MYSQL_PASSWORD: admin
-      MYSQL_DATABASE: dev
+      - WATCHFILES_FORCE_POLLING=true
+    networks:
+      - network1
+
+  # pgmaster:
+  #   image: postgres:12
+  #   environment:
+  #     POSTGRES_DB: "dev"
+  #     POSTGRES_USER: "admin"
+  #     POSTGRES_PASSWORD: "admin"
+  #   volumes:
+  #     - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+  #     - ./new_people.csv:/new_people.csv
+  #     # - ./config/postgresql.conf:/var/lib/postgresql/data/master_postgresql.conf
+  #   ports:
+  #     - "5432:5432"
+
+  grafana:
+    image: grafana/grafana
     ports:
-      - "3306:3306"
+      - 3000:3000
+    networks:
+      - network1
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - 9090:9090
     volumes:
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./new_people.csv:/var/lib/mysql-files/new_people.csv
-      - ./people.csv:/var/lib/mysql-files/people.csv
-      - ./config-file.cnf:/etc/mysql/conf.d/config-file.cnf
+      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - network1
+    
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter
+    ports:
+      - 9187:9187
+    environment:
+      DATA_SOURCE_NAME: "postgresql://admin:admin@pgmaster:5432/dev?sslmode=disable"
+    links:
+      # - pgmaster
+      - prometheus
+    networks:
+      - network1
+  
+networks:
+  network1:
+    name: pgnet
+    external: true

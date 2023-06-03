@@ -46,6 +46,6 @@ print(data[["id","first_name" ,"second_name" ,"age" ,"birthdate" ,"biography" ,"
 
 print(data.info())
 
-data[["id","first_name" ,"second_name" ,"age" ,"birthdate" ,"biography" ,"city" ,"hashed_password" ,"disabled"]].to_csv('new_people.csv', index=False, encoding='utf-8')
+data[["id","first_name" ,"second_name" ,"age" ,"birthdate" ,"biography" ,"city" ,"hashed_password" ,"disabled"]].to_csv('new_people.csv', index=False, encoding='utf-8', header=False)
 
 

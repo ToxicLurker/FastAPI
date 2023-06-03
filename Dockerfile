@@ -8,7 +8,7 @@ RUN cd app \
     && pip install poetry \
     && poetry install
 
-CMD ["poetry", "run", "uvicorn", "src.test_project.funcs:app", "--host", "0.0.0.0", "--port", "80", "--reload"]
+CMD ["poetry", "run", "uvicorn", "src.test_project.funcs:app", "--reload", "--host", "0.0.0.0", "--port", "80"]
 # CMD ["sleep", "1000"]
 
 WORKDIR /app
