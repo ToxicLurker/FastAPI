@@ -3,6 +3,7 @@ from ..models.user_models import UserInDB, User
 from contextlib import contextmanager
 import logging
 import time
+from datetime import datetime
 
 @contextmanager
 def managed_resource():
@@ -131,3 +132,28 @@ def create_user(user_info: UserInDB) -> str:
 
     return answer
 
+
+def send_message(sender_id: str, reciever_id: str, message: str) -> str:
+    ts = int(datetime.now().strftime('%s'))
+    insert_stmt = (
+    "INSERT INTO messages (sender_id, reciever_id, message, ts)"
+    f" VALUES ('{sender_id}', '{reciever_id}', '{message}', {ts})"
+    )
+    print(insert_stmt)
+    with managed_resource() as (cursor, cnx):
+        try:
+            cursor.execute(insert_stmt)
+            cnx.commit()
+            print('success')
+        except:
+            cnx.rollback()
+            print('failure')
+
+
+
+def get_messages(sender_id: str, reciever_id: str) -> str:
+    with managed_resource() as (cursor, cnx):
+        cursor.execute(f"select message from messages where sender_id = '{sender_id}' and reciever_id = '{reciever_id}'")
+        rows = cursor.fetchall()
+
+    return rows

@@ -8,51 +8,51 @@ services:
       - "80:80"
     environment:
       - WATCHFILES_FORCE_POLLING=true
-    networks:
-      - network1
+    # networks:
+    #   - network1
 
-  # pgmaster:
-  #   image: postgres:12
-  #   environment:
-  #     POSTGRES_DB: "dev"
-  #     POSTGRES_USER: "admin"
-  #     POSTGRES_PASSWORD: "admin"
-  #   volumes:
-  #     - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
-  #     - ./new_people.csv:/new_people.csv
-  #     # - ./config/postgresql.conf:/var/lib/postgresql/data/master_postgresql.conf
-  #   ports:
-  #     - "5432:5432"
-
-  grafana:
-    image: grafana/grafana
-    ports:
-      - 3000:3000
-    networks:
-      - network1
-
-  prometheus:
-    image: prom/prometheus
-    ports:
-      - 9090:9090
-    volumes:
-      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-    networks:
-      - network1
-    
-  postgres-exporter:
-    image: prometheuscommunity/postgres-exporter
-    ports:
-      - 9187:9187
+  pgmaster:
+    image: postgres:12
     environment:
-      DATA_SOURCE_NAME: "postgresql://admin:admin@pgmaster:5432/dev?sslmode=disable"
-    links:
-      # - pgmaster
-      - prometheus
-    networks:
-      - network1
+      POSTGRES_DB: "dev"
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "admin"
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./new_people.csv:/new_people.csv
+      # - ./config/postgresql.conf:/var/lib/postgresql/data/master_postgresql.conf
+    ports:
+      - "5432:5432"
+
+  # grafana:
+  #   image: grafana/grafana
+  #   ports:
+  #     - 3000:3000
+  #   networks:
+  #     - network1
+
+  # prometheus:
+  #   image: prom/prometheus
+  #   ports:
+  #     - 9090:9090
+  #   volumes:
+  #     - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+  #   networks:
+  #     - network1
+    
+  # postgres-exporter:
+  #   image: prometheuscommunity/postgres-exporter
+  #   ports:
+  #     - 9187:9187
+  #   environment:
+  #     DATA_SOURCE_NAME: "postgresql://admin:admin@pgmaster:5432/dev?sslmode=disable"
+  #   links:
+  #     # - pgmaster
+  #     - prometheus
+  #   networks:
+  #     - network1
   
-networks:
-  network1:
-    name: pgnet
-    external: true
+# networks:
+#   network1:
+#     name: pgnet
+#     external: true

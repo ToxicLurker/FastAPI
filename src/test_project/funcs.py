@@ -12,7 +12,7 @@ import mysql.connector
 
 from fastapi import FastAPI, Request
 
-from .crud.crud_user import get_user, create_user, get_user_info, get_user_by_name, generate_numbers_func
+from .crud.crud_user import get_user, create_user, get_user_info, get_user_by_name, generate_numbers_func, send_message, get_messages
 from .models.token_modles import Token, TokenData
 from .models.user_models import User, UserInDB
 
@@ -136,6 +136,20 @@ async def user_search(first_name: str, second_name: str, current_user: User = De
 @app.get("/generate_numbers")
 async def generate_numbers(current_user: User = Depends(get_current_active_user)):
     return generate_numbers_func()
+
+
+@app.get("/dialog/{user_id}/send")
+async def dialog_send_message(user_id: str, message: str, current_user: User = Depends(get_current_active_user)):
+    print('a')
+    logging.info('b')
+    send_message(current_user.id, user_id, message)
+
+
+@app.get("/dialog/{user_id}/list")
+async def dialog_get_messages(user_id: str, current_user: User = Depends(get_current_active_user)):
+    print('hui')
+    print(current_user.id)
+    return get_messages(current_user.id, user_id)
 
 
 # @app.get("/user/show_index")
