@@ -24,6 +24,23 @@ services:
     ports:
       - "5432:5432"
 
+
+  # rabbitmq:
+  #   image: rabbitmq:3-management
+  #   ports:
+  #     - 5672:5672
+  #     - 15672:15672
+
+  tarantool:
+    container_name: mytarantool
+    image: tarantool/tarantool
+    command: tarantool ../../usr/local/share/tarantool/app.init.lua
+    ports:
+      - 3301:3301
+    volumes:
+      - ./db/app.init.lua:/usr/local/share/tarantool/app.init.lua
+      - ./new_people.csv:/new_people.csv
+      - ./new_people1.csv:/new_people1.csv
   # grafana:
   #   image: grafana/grafana
   #   ports:

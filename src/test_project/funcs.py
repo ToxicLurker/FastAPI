@@ -12,10 +12,11 @@ import mysql.connector
 
 from fastapi import FastAPI, Request
 
-from .crud.crud_user import get_user, create_user, get_user_info, get_user_by_name, generate_numbers_func, send_message, get_messages
+from .crud.crud_user import get_user, create_user, get_user_info, get_user_by_name, generate_numbers_func, send_message, get_messages, add_friend, delete_friend, create_post, feed_post, get_user_by_name_from_tarantool
 from .models.token_modles import Token, TokenData
 from .models.user_models import User, UserInDB
 
+import tarantool
 import logging
 
 # to get a string like this run:
@@ -23,6 +24,8 @@ import logging
 SECRET_KEY = "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30000
+
+
 
 
 
@@ -132,6 +135,10 @@ async def get_user_by_id(id: str, current_user: User = Depends(get_current_activ
 async def user_search(first_name: str, second_name: str, current_user: User = Depends(get_current_active_user)):
     return get_user_by_name(first_name.capitalize(), second_name.capitalize())
 
+@app.get("/user/search_tar")
+async def user_search_tar(first_name: str, second_name: str, current_user: User = Depends(get_current_active_user)):
+    return get_user_by_name_from_tarantool(first_name.capitalize(), second_name.capitalize())
+
 
 @app.get("/generate_numbers")
 async def generate_numbers(current_user: User = Depends(get_current_active_user)):
@@ -147,11 +154,46 @@ async def dialog_send_message(user_id: str, message: str, current_user: User = D
 
 @app.get("/dialog/{user_id}/list")
 async def dialog_get_messages(user_id: str, current_user: User = Depends(get_current_active_user)):
-    print('hui')
-    print(current_user.id)
     return get_messages(current_user.id, user_id)
 
 
-# @app.get("/user/show_index")
-# async def user_show_index(first_name: str, second_name: str, current_user: User = Depends(get_current_active_user)):
-#     return show_index(first_name, second_name)
+@app.get("/friend/add")
+async def add_friend_ep(user_friend_id: str, current_user: User = Depends(get_current_active_user)):
+    return add_friend(current_user.id, user_friend_id)
+
+
+@app.get("/friend/delete")
+async def delete_friend_ep(user_friend_id: str, current_user: User = Depends(get_current_active_user)):
+    return delete_friend(current_user.id, user_friend_id)
+
+@app.get("/post/create")
+async def post_create(post: str, current_user: User = Depends(get_current_active_user)):
+    return create_post(current_user.id, post)
+
+
+@app.get("/post/feed")
+async def post_feed(current_user: User = Depends(get_current_active_user)):
+    return feed_post(current_user.id)
+
+
+
+@app.get("/user/show_index")
+async def user_show_index(current_user: User = Depends(get_current_active_user)):
+    connection = tarantool.connect("mytarantool", 3301)
+    # tarantool.connect("mytarantool", 3301, user='guest', password='pass')
+    tester = connection.space('users')
+    with open('new_people.csv', 'r') as f:
+        for i in f:
+            record = i.split(',')
+            print(type(record[0]))
+            print(type(record[1]))
+            print(type(record[2]))
+            print(type(record[3]))
+            print(type(record[4]))
+            print(type(record[5]))
+            print(type(record[6]))
+            print(type(record[8]))
+            print(record[0], record[1], record[2], record[3], record[4], record[5], record[6], int(record[8]))
+            tester.insert((record[0], record[1], record[2], record[3], record[4], record[5], record[6], int(record[8])))
+    return 'ok'
+    # return show_index(first_name, second_name)
