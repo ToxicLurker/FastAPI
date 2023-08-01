@@ -161,7 +161,14 @@ async def dialog_send_message(user_id: str, message: str, current_user: User = D
 
 @app.get("/dialog/{user_id}/list")
 async def dialog_get_messages(user_id: str, current_user: User = Depends(get_current_active_user)):
-    return get_messages(current_user.id, user_id)
+    msg = MessageClass(user_id=user_id, current_user=current_user.id, message='')
+    print(json.dumps(msg.dict()))
+    r = requests.get(f'http://dialog_ms:12345/dialog/list', json=msg.dict())
+    logging.info('r')
+    logging.info(r)
+    print(r)
+    print(r.text)
+    return r.text
 
 
 @app.get("/friend/add")

@@ -36,7 +36,7 @@ async def dialog_send_message(message: MessageClass):
     return "Message was sent"
 
 
-@app.get("/dialog/{cur_user}/{user_id}/list")
-async def dialog_get_messages(cur_user: str, user_id: str):
-    return get_messages(cur_user, user_id)
+@app.get("/dialog/list")
+async def dialog_get_messages(message: MessageClass):
+    return get_messages(message.current_user, message.user_id)
 
