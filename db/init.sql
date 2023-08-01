@@ -22,7 +22,7 @@ INSERT INTO users values ('friend1', 'john1', 'doe1', NULL, '1990-05-01', 'I lov
 INSERT INTO users values ('friend2', 'john2', 'doe2', NULL, '1990-05-01', 'I love cookies2', 'Moscow2', '$2b$12$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW', 0);
 
 
-COPY users FROM '/new_people.csv' WITH (FORMAT csv);
+-- COPY users FROM '/new_people.csv' WITH (FORMAT csv);
 
 
 CREATE TABLE IF NOT EXISTS messages (

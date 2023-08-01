@@ -1,4 +1,4 @@
-version: "3.9"
+version: "3.3"
 services:
   app:
     build: .
@@ -31,16 +31,16 @@ services:
   #     - 5672:5672
   #     - 15672:15672
 
-  tarantool:
-    container_name: mytarantool
-    image: tarantool/tarantool
-    command: tarantool ../../usr/local/share/tarantool/app.init.lua
-    ports:
-      - 3301:3301
-    volumes:
-      - ./db/app.init.lua:/usr/local/share/tarantool/app.init.lua
-      - ./new_people.csv:/new_people.csv
-      - ./new_people1.csv:/new_people1.csv
+  # tarantool:
+  #   container_name: mytarantool
+  #   image: tarantool/tarantool
+  #   command: tarantool ../../usr/local/share/tarantool/app.init.lua
+  #   ports:
+  #     - 3301:3301
+  #   volumes:
+  #     - ./db/app.init.lua:/usr/local/share/tarantool/app.init.lua
+  #     - ./new_people.csv:/new_people.csv
+  #     - ./new_people1.csv:/new_people1.csv
   # grafana:
   #   image: grafana/grafana
   #   ports:
@@ -73,3 +73,24 @@ services:
 #   network1:
 #     name: pgnet
 #     external: true
+  dialog_ms:
+    build: ./dialog_ms
+    volumes:
+      - ./dialog_ms/src/dialog_ms:/src/dialog_ms
+    ports:
+      - "12345:12345"
+    environment:
+      - WATCHFILES_FORCE_POLLING=true
+    # networks:
+    #   - network1
+
+  pg_dialog_ms:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: "dev"
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "admin"
+    volumes:
+      - ./dialog_ms/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5433:5432"
