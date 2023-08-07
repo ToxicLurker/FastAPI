@@ -27,7 +27,7 @@ def on_message(
 
 @contextmanager
 def managed_resource():
-    cnx =  psycopg2.connect(host="pgmaster", user='admin', password='admin', dbname='dev')
+    cnx =  psycopg2.connect(host="pgmaster", user='admin', password='admin', dbname='dev', port=5432)
     cursor = cnx.cursor()
     try:
         yield (cursor, cnx)
@@ -38,7 +38,7 @@ def managed_resource():
 
 @contextmanager
 def connect_to_replica():
-    cnx =  psycopg2.connect(host="pgmaster", user='admin', password='admin', dbname='dev')
+    cnx =  psycopg2.connect(host="haproxy", user='admin', password='admin', dbname='dev', port=80)
     cursor = cnx.cursor()
     try:
         yield (cursor, cnx)
@@ -78,7 +78,7 @@ def get_user_by_name(first_name: str, second_name: str):
     #     return user_list
     print(first_name)
     print(second_name)
-    with managed_resource() as (cursor, cnx):
+    with connect_to_replica() as (cursor, cnx):
         cursor.execute(f"select id, first_name, second_name, age, birthdate, biography, city, disabled from users where first_name like '{first_name}%' and second_name like '{second_name}%' order by id")
         rows = cursor.fetchall()
         print(f"select id, first_name, second_name, age, birthdate, biography, city, disabled from users where first_name like '{first_name}%' and second_name like '{second_name}%' order by id")

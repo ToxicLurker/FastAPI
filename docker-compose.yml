@@ -1,6 +1,6 @@
-version: "3.3"
+version: "3.7"
 services:
-  app:
+  app1:
     build: .
     volumes:
       - ./src/test_project:/src/test_project
@@ -8,9 +8,61 @@ services:
       - "80:80"
     environment:
       - WATCHFILES_FORCE_POLLING=true
-    # networks:
-    #   - network1
+    networks:
+      - otus-nginx-demo
 
+  app2:
+    build: .
+    volumes:
+      - ./src/test_project:/src/test_project
+    ports:
+      - "81:80"
+    environment:
+      - WATCHFILES_FORCE_POLLING=true
+    networks:
+      - otus-nginx-demo
+
+  app3:
+    build: .
+    volumes:
+      - ./src/test_project:/src/test_project
+    ports:
+      - "82:80"
+    environment:
+        - WATCHFILES_FORCE_POLLING=true
+    networks:
+      - otus-nginx-demo
+
+
+  nginx:
+    image: nginx:1.21
+    container_name: nginx-lb
+    restart: on-failure
+    networks:
+      - otus-nginx-demo
+    volumes:
+      - "./configs/default.conf:/etc/nginx/conf.d/default.conf"
+    ports:
+      - "4088:80"
+      - "4098:8080"
+
+  haproxy:
+      image: haproxy:1.8
+      container_name: haproxy-lb
+      restart: "no"
+      networks:
+        - network1
+        - otus-nginx-demo
+      volumes:
+        - "./configs/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg"
+      ports:
+        - "4080:80"
+        - "8404:8404"
+      links:
+        - pgmaster
+        - pgmaster2
+        - pgmaster3
+    
   pgmaster:
     image: postgres:12
     environment:
@@ -23,7 +75,56 @@ services:
       # - ./config/postgresql.conf:/var/lib/postgresql/data/master_postgresql.conf
     ports:
       - "5432:5432"
+    networks:
+      - network1
+      - otus-nginx-demo
 
+  pgmaster2:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: "dev"
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "admin"
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./new_people.csv:/new_people.csv
+      # - ./config/postgresql.conf:/var/lib/postgresql/data/master_postgresql.conf
+    ports:
+      - "5433:5432"
+    networks:
+      - network1
+
+  pgmaster3:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: "dev"
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "admin"
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./new_people.csv:/new_people.csv
+      # - ./config/postgresql.conf:/var/lib/postgresql/data/master_postgresql.conf
+    ports:
+      - "5434:5432"
+    networks:
+      - network1
+
+
+  # nginx2:
+  #   image: nginx:1.21
+  #   container_name: nginx-lb1
+  #   restart: on-failure
+  #   networks:
+  #     - otus-nginx-demo
+  #   volumes:
+  #     - "./configs/default1.conf:/etc/nginx/conf.d/default.conf"
+  #   ports:
+  #     - "4089:80"
+  #     - "4099:8080"
+  #   links:
+  #     - pgmaster
+  #     - pgmaster2
+  #     - pgmaster3
 
   # rabbitmq:
   #   image: rabbitmq:3-management
@@ -48,31 +149,28 @@ services:
   #   networks:
   #     - network1
 
-  # prometheus:
-  #   image: prom/prometheus
-  #   ports:
-  #     - 9090:9090
-  #   volumes:
-  #     - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-  #   networks:
-  #     - network1
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./configs/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - network1
     
-  # postgres-exporter:
-  #   image: prometheuscommunity/postgres-exporter
-  #   ports:
-  #     - 9187:9187
-  #   environment:
-  #     DATA_SOURCE_NAME: "postgresql://admin:admin@pgmaster:5432/dev?sslmode=disable"
-  #   links:
-  #     # - pgmaster
-  #     - prometheus
-  #   networks:
-  #     - network1
-  
-# networks:
-#   network1:
-#     name: pgnet
-#     external: true
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter
+    ports:
+      - 9187:9187
+    environment:
+      DATA_SOURCE_NAME: "postgresql://admin:admin@pgmaster:5432/dev?sslmode=disable"
+    links:
+      # - pgmaster
+      - prometheus
+    networks:
+      - network1
+
+
   dialog_ms:
     build: ./dialog_ms
     volumes:
@@ -93,4 +191,11 @@ services:
     volumes:
       - ./dialog_ms/db/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5433:5432"
+      - "5435:5432"
+
+networks:
+  otus-nginx-demo:
+    external: true
+  network1:
+    name: pgnet
+    external: true
