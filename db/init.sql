@@ -47,3 +47,5 @@ CREATE TABLE IF NOT EXISTS posts (
     post VARCHAR(100),
     ts INT
     );
+
+INSERT INTO posts (user_id, post, ts) VALUES ('friend1', 'asdsada', 1691605137);

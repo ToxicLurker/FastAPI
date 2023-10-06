@@ -1,5 +1,21 @@
 version: "3.7"
 services:
+  # cache:
+  #   image: redis:6.2-alpine
+  #   restart: always
+  #   ports:
+  #     - '6379:6379'
+  #   environment:
+  #     - ALLOW_EMPTY_PASSWORD=yes
+
+  cache:
+    image: redislabs/redismod
+    container_name: cache
+    ports:
+      - '6379:6379'
+    networks:
+      - otus-nginx-demo
+      
   app1:
     build: .
     volumes:
@@ -8,8 +24,12 @@ services:
       - "80:80"
     environment:
       - WATCHFILES_FORCE_POLLING=true
+      - PG_SERVICE_URI=postgresql://admin:admin@pgmaster:5432/dev
+      - REDIS_SERVICE_URI=redis://cache:6379
     networks:
       - otus-nginx-demo
+    depends_on:
+      - cache
 
   app2:
     build: .
