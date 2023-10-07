@@ -31,16 +31,56 @@ services:
     depends_on:
       - cache
 
-  app2:
-    build: .
+  dialog_ms:
+    build: ./dialog_ms
     volumes:
-      - ./src/test_project:/src/test_project
+      - ./dialog_ms/src/dialog_ms:/src/dialog_ms
     ports:
-      - "81:80"
+      - "12345:12345"
     environment:
       - WATCHFILES_FORCE_POLLING=true
     networks:
       - otus-nginx-demo
+
+  pg_dialog_ms:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: "dev"
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "admin"
+    volumes:
+      - ./dialog_ms/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5436:5432"
+    networks:
+      - otus-nginx-demo
+
+
+
+  counter_ms:
+    build: ./counter_ms
+    volumes:
+      - ./counter_ms/src/counter_ms:/src/counter_ms
+    ports:
+      - "12346:12346"
+    environment:
+      - WATCHFILES_FORCE_POLLING=true
+    networks:
+      - otus-nginx-demo
+
+  pg_counter_ms:
+    image: postgres:12
+    environment:
+      POSTGRES_DB: "dev"
+      POSTGRES_USER: "admin"
+      POSTGRES_PASSWORD: "admin"
+    volumes:
+      - ./counter_ms/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5437:5432"
+    networks:
+      - otus-nginx-demo
+
 
   app3:
     build: .
@@ -191,27 +231,27 @@ services:
       - network1
 
 
-  dialog_ms:
-    build: ./dialog_ms
-    volumes:
-      - ./dialog_ms/src/dialog_ms:/src/dialog_ms
-    ports:
-      - "12345:12345"
-    environment:
-      - WATCHFILES_FORCE_POLLING=true
-    # networks:
-    #   - network1
+  # dialog_ms:
+  #   build: ./dialog_ms
+  #   volumes:
+  #     - ./dialog_ms/src/dialog_ms:/src/dialog_ms
+  #   ports:
+  #     - "12345:12345"
+  #   environment:
+  #     - WATCHFILES_FORCE_POLLING=true
+  #   # networks:
+  #   #   - network1
 
-  pg_dialog_ms:
-    image: postgres:12
-    environment:
-      POSTGRES_DB: "dev"
-      POSTGRES_USER: "admin"
-      POSTGRES_PASSWORD: "admin"
-    volumes:
-      - ./dialog_ms/db/init.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "5435:5432"
+  # pg_dialog_ms:
+  #   image: postgres:12
+  #   environment:
+  #     POSTGRES_DB: "dev"
+  #     POSTGRES_USER: "admin"
+  #     POSTGRES_PASSWORD: "admin"
+  #   volumes:
+  #     - ./dialog_ms/db/init.sql:/docker-entrypoint-initdb.d/init.sql
+  #   ports:
+  #     - "5435:5432"
 
 networks:
   otus-nginx-demo:

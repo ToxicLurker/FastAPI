@@ -8,10 +8,6 @@ import pika
 from pika import spec
 from pika.adapters.blocking_connection import BlockingChannel
 import tarantool
-import json
-import requests
-
-from ..models.transmitions_models import MessageClass
 
 def on_message(
         channel: BlockingChannel,
@@ -31,7 +27,7 @@ def on_message(
 
 @contextmanager
 def managed_resource():
-    cnx =  psycopg2.connect(host="pg_dialog_ms", user='admin', password='admin', dbname='dev')
+    cnx =  psycopg2.connect(host="pg_counter_ms", user='admin', password='admin', dbname='dev')
     cursor = cnx.cursor()
     try:
         yield (cursor, cnx)
@@ -42,7 +38,7 @@ def managed_resource():
 
 @contextmanager
 def connect_to_replica():
-    cnx =  psycopg2.connect(host="pg_dialog_ms", user='admin', password='admin', dbname='dev')
+    cnx =  psycopg2.connect(host="pg_counter_ms", user='admin', password='admin', dbname='dev')
     cursor = cnx.cursor()
     try:
         yield (cursor, cnx)
@@ -199,45 +195,57 @@ def create_user(user_info: UserInDB) -> str:
     return answer
 
 
-def send_message(sender_id: str, reciever_id: str, message: str) -> str:
-    ts = int(datetime.now().strftime('%s'))
+def send_message(sender_id: str, reciever_id: str) -> str:
+    with managed_resource() as (cursor, cnx):
+        cursor.execute(f"select * from messages_count where sender_id = '{sender_id}' AND reciever_id = '{reciever_id}';")
+        row = cursor.fetchone()
+
+    if not row:
+        insert_stmt = (
+        f"insert into messages_count values ('{sender_id}', '{reciever_id}', 0);"
+        )
+        print(insert_stmt)
+        with managed_resource() as (cursor, cnx):
+            try:
+                cursor.execute(insert_stmt)
+                cnx.commit()
+                print('success')
+            except:
+                cnx.rollback()
+                print('failure')
+                return 'failure'
     insert_stmt = (
-    "INSERT INTO messages (sender_id, reciever_id, message, ts)"
-    f" VALUES ('{sender_id}', '{reciever_id}', '{message}', {ts})"
+    f"UPDATE messages_count SET unread_count = unread_count + 1 WHERE sender_id = '{sender_id}' AND reciever_id = '{reciever_id}';"
     )
     print(insert_stmt)
     with managed_resource() as (cursor, cnx):
         try:
             cursor.execute(insert_stmt)
             cnx.commit()
-            msg = MessageClass(sender_id=sender_id, reciever_id=reciever_id)
-            print(json.dumps(msg.dict()))
-            r = requests.post(f'http://counter_ms:12346/dialog/increase_unread', json=msg.dict())
-            logging.info('r')
-            logging.info(r)
-            print(r)
-            print(r.text)
             print('success')
-            if r.text != 'success':
-                raise Exception
+            return 'success'
         except:
             cnx.rollback()
             print('failure')
+            return 'failure'
 
 
 
 def get_messages(sender_id: str, reciever_id: str) -> str:
+    insert_stmt = (
+    f"UPDATE messages WHERE sender_id = '{sender_id}' AND reciever_id = '{reciever_id}' SET unread_count = 0)"
+    )
+    print(insert_stmt)
     with managed_resource() as (cursor, cnx):
-        cursor.execute(f"select message from messages where sender_id = '{sender_id}' and reciever_id = '{reciever_id}'")
         try:
-            msg = MessageClass(sender_id=sender_id, reciever_id=reciever_id)
-            print(json.dumps(msg.dict()))
-            r = requests.get(f'http://counter_ms:12346/dialog/decrease_unread', json=msg.dict())
-            if r.text != 'success':
-                raise Exception
-            return cursor.fetchall()
+            cursor.execute(insert_stmt)
+            cnx.commit()
+            print('success')
+            return 'success'
         except:
-            return ''
+            cnx.rollback()
+            print('failure')
+            return 'failure'
 
 
 def add_friend(user_id: str, user_friend_id: str):

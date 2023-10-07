@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "dialog_ms"
+name = "counter_ms"
 version = "0.1.0"
 description = ""
 authors = ["Your Name <you@example.com>"]

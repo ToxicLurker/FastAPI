@@ -23,20 +23,18 @@ app = FastAPI()
 
 
 class MessageClass(BaseModel):
-    user_id: str
-    current_user: str
-    message: str
+    sender_id: str
+    reciever_id: str
 
 
-@app.post("/dialog/send")
+@app.post("/dialog/increase_unread")
 async def dialog_send_message(message: MessageClass):
     print('a')
     logging.info('b')
-    send_message(message.current_user, message.user_id, message.message)
-    return "Message was sent"
+    return send_message(message.sender_id, message.reciever_id)
 
 
-@app.get("/dialog/list")
+@app.get("/dialog/decrease_unread")
 async def dialog_get_messages(message: MessageClass):
-    return get_messages(message.current_user, message.user_id)
+    return get_messages(message.sender_id, message.reciever_id)
 

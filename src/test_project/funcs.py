@@ -15,7 +15,7 @@ from fastapi import FastAPI, Request
 from .crud.crud_user import get_user, create_user, get_user_info, get_user_by_name, generate_numbers_func, send_message, get_messages, add_friend, delete_friend, create_post, feed_post, get_user_by_name_from_tarantool
 from .models.token_modles import Token, TokenData
 from .models.user_models import User, UserInDB
-from .models.transmitions_models import MessageClass
+from .models.transmitions_models import MessageClass, MessageClassNew
 
 import tarantool
 import logging
@@ -150,7 +150,7 @@ async def generate_numbers(current_user: User = Depends(get_current_active_user)
 
 @app.post("/dialog/{user_id}/send")
 async def dialog_send_message(user_id: str, message: str, current_user: User = Depends(get_current_active_user)):
-    msg = MessageClass(user_id=user_id, current_user=current_user.id, message=message)
+    msg = MessageClassNew(user_id=user_id, current_user=current_user.id, message=message)
     print(json.dumps(msg.dict()))
     r = requests.post(f'http://dialog_ms:12345/dialog/send', json=msg.dict())
     logging.info('r')
