@@ -253,7 +253,6 @@ def delete_friend(user_id: str, user_friend_id: str):
 
 def create_post(user_id: str, post: str):
     ts = int(datetime.now().strftime('%s'))
-    cache_post_feed(user_id, post, ts)
     insert_stmt = (
     "INSERT INTO posts (user_id, post, ts)"
     f" VALUES ('{user_id}', '{post}', {ts})"
@@ -268,23 +267,64 @@ def create_post(user_id: str, post: str):
             cnx.rollback()
             print('failure')
 
-
-
-def feed_post(user_id: str):
+    insert_stmt = f"select user_friend_id from friends where user_id = {user_id};"
+    user_list = []
     with managed_resource() as (cursor, cnx):
-        posts = read_feed(user_id)
-        if posts:
-            return posts
-        cursor.execute(f"select user_friend_id from friends where user_id = '{user_id}'")
-        friends = cursor.fetchall()
-        print(friends)
-        posts = []
-        for i in friends:
-            cursor.execute(f"select * from posts where user_id = '{i[0]}'")
-            print(f"select * from posts where user_id = '{i[0]}'")
-            rows = cursor.fetchall()
-            print(rows)
-            posts.extend(rows)
+        try:
+            cursor.execute(insert_stmt)
+            for (user_friend_id) in cursor:
+                user_list.append(user_friend_id[0])
+            print('success')
+        except:
+            print('failure')
+            return None
+    
+    logging.basicConfig()
+    url = "amqp://guest:guest@rabbitmq/"
+    params = pika.URLParameters(url)
+    params.socket_timeout = 5
+    connection = pika.BlockingConnection(params)
+    channel = connection.channel()
+
+    for i in user_list:
+        exchange = "test"
+        queue = i
+
+        # channel.tx_select()
+        channel.exchange_declare(exchange, durable=True)
+        channel.basic_publish(exchange, queue, str(post).encode("utf-8"), mandatory=True)
+        time.sleep(0.5)
+        # channel.tx_rollback()
+        connection.close()
+
+
+
+def feed_post(user_id: str):        
+    logging.basicConfig()
+    url = "amqp://guest:guest@rabbitmq/"
+    params = pika.URLParameters(url)
+    params.socket_timeout = 5
+    connection = pika.BlockingConnection(params)
+    channel = connection.channel()
+    #установить ограничение на 5 сообщений единовременно
+    channel.basic_qos(prefetch_count=5)
+    # channel.tx_select()
+
+    exchange = "test"
+    queue = "user_id"
+
+    channel.queue_declare(queue, durable=True)
+    channel.queue_bind(queue, exchange)
+    #здесь можно включить auto_ack для автоматического подтверждения
+    channel.basic_consume(queue, on_message_callback=on_message, auto_ack=True)
+    try:
+        channel.start_consuming()
+    except KeyboardInterrupt:
+        channel.stop_consuming()
+    # try:
+    #     channel.start_consuming()
+    # except KeyboardInterrupt:
+    #     channel.stop_consuming()
 
     return {user_id: posts}
 
